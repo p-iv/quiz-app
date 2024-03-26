@@ -1,4 +1,6 @@
-import { useEffect, useReducer } from "react";
+import { useReducer } from "react";
+
+import questionData from "../questions.json";
 import Header from "./Header";
 import Main from "./Main";
 import Loader from "./Loader";
@@ -13,8 +15,8 @@ import Timer from "./Timer";
 
 const SECS_PER_QUESTION = 30;
 const initialState = {
-  questions: [],
-  status: "loading",
+  questions: questionData.questions,
+  status: "ready",
   index: 0,
   answer: null,
   points: 0,
@@ -24,17 +26,6 @@ const initialState = {
 
 function reducer(state, action) {
   switch (action.type) {
-    case "dataReceived":
-      return {
-        ...state,
-        questions: action.payload,
-        status: "ready",
-      };
-    case "dataFailed":
-      return {
-        ...state,
-        status: "error",
-      };
     case "start":
       return {
         ...state,
@@ -43,6 +34,7 @@ function reducer(state, action) {
       };
     case "newAnswer":
       const question = state.questions.at(state.index);
+
       return {
         ...state,
         answer: action.payload,
@@ -88,25 +80,12 @@ export default function App() {
   ] = useReducer(reducer, initialState);
 
   const numQuestions = questions.length;
-  const maxPossiblePoints = questions.reduce(
-    (prev, cur) => prev + cur.points,
-    0
-  );
-
-  useEffect(function () {
-    fetch("http://localhost:9000/questions")
-      .then((res) => res.json())
-      .then((data) => dispatch({ type: "dataReceived", payload: data }))
-      .catch((err) => dispatch({ type: "dataFailed" }));
-  }, []);
-
+  const maxPossiblePoints = 150;
   return (
     <div className="app">
       <Header />
 
       <Main>
-        {status === "loading" && <Loader />}
-        {status === "error" && <Error />}
         {status === "ready" && (
           <StartScreen numQuestions={numQuestions} dispatch={dispatch} />
         )}
